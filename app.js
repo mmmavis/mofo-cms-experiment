@@ -1,24 +1,74 @@
 import express from 'express';
 import path from 'path';
+import Habitat from 'habitat';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { match, RoutingContext } from 'react-router';
+import request from 'superagent';
 import routes from './Routes.jsx';
 
-var PORT = process.env.PORT || '9090';
+var env = new Habitat();
+Habitat.load();
+
+var PORT = env.get('PORT') || '9090';
+var WP_CREDS = env.get('WP');
 
 var app = express();
-
 app.set('view engine', 'html');
 
-function serveStaticFiles(pathRequested, res) {
+function serveStaticFiles(req, res) {
+  var pathRequested = req.path;
   if ( pathRequested === "/public/style.css" ) {
     res.sendFile( path.resolve("public/style.css") );
   } else if ( pathRequested === "/bundle.js" ) {
     res.sendFile( path.resolve("bundle.js") );
-  } else {
+  } else if ( pathRequested === "/login") {
+    authWP(res);
+  } else if ( pathRequested === "/auth_success") {
+    getToken(req,res);
+  }
+  else {
     res.status(404).send('Not found');
   }
+}
+
+function authWP(res) {
+  request.get(WP_CREDS.auth_endpoint)
+          .query({
+            client_id: WP_CREDS.client_id,
+            redirect_uri: WP_CREDS.auth_redirect_uri,
+            blog_id: WP_CREDS.blog_id,
+            response_type: 'code'
+          })
+          .end(function(err, resFromWP) {
+            if (err) { 
+              console.log(`error: `, err); 
+              res.status(404).send(err.response.text); 
+            } else {
+              res.send(resFromWP.text);
+            }
+          });
+}
+
+function getToken(req,res) {
+  request.post(WP_CREDS.token_endpoint)
+         .set('Content-Type', 'application/x-www-form-urlencoded')
+         .send({
+            client_id: WP_CREDS.client_id,
+            redirect_uri: WP_CREDS.auth_redirect_uri,
+            client_secret: WP_CREDS.client_secret,
+            code: req.query.code,
+            grant_type: 'authorization_code'
+         })
+         .end(function(err, resFromWP) {
+          if (err) { 
+            console.log(`error: `, err); 
+            res.status(404).send(err.response.text); 
+          } else {
+            console.log("\n\n resFromWP ///// \n\n", resFromWP.text);
+            res.send("Token get!");
+          }
+        })
 }
 
 function htmlTemplate(appHtmlAsString) {
@@ -57,7 +107,7 @@ app.get('/*', function (req, res) {
     } else if (renderProps) {
       res.status(200).send( htmlTemplate(ReactDOMServer.renderToStaticMarkup(<RoutingContext {...renderProps} />)) );
     } else {
-      serveStaticFiles(req.path, res);
+      serveStaticFiles(req, res);
     }
   })
 });
