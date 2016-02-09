@@ -7,6 +7,7 @@ import Curricula from './pages/curricula-home.jsx';
 import CurriculumKit from './components/CurriculumKitTemplate.jsx';
 import BlogHome from './pages/blog-home.jsx';
 import BlogPost from './components/BlogPostTemplate.jsx';
+import AuthSuccess from './pages/auth-success.jsx';
 
 export default (
   <Route path="/" component={Index}>
@@ -16,5 +17,6 @@ export default (
     <Route path="curricula/:slug" component={CurriculumKit} />
     <Route path="blog" component={BlogHome} />
     <Route path="blog/:year/:month/:day/:slug" component={BlogPost} />
+    <Route path="auth-success" component={AuthSuccess} />
   </Route>
 );

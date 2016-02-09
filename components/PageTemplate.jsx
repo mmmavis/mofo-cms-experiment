@@ -10,24 +10,16 @@ export default class PageTemplate extends React.Component {
     };
   }
   getWPToken() {
-    let oAuthEndpoint = `https://public-api.wordpress.com/oauth2/authorize?client_id=44828&redirect_uri=http://localhost:9090/auth_success&response_type=token&blog=105660860`;
-    
-    request
-      .get(oAuthEndpoint)
-      .accept(`json`)
-      .end((err, res) => {
-        if (err) { console.log(`error: `, err); }
-        console.log(res.text);
-        var params = window.location.hash.substr(1);
-        var token = params.substr( params.indexOf( 'access_token' ) ).split( '&' )[0].split( '=' )[1];
-        console.log("token = ", token);
-        this.getPagefromWP(token);
-      });
+    let storage = window.localStorage;
+    let wpAuthInfo = storage[configWPCom.localStorageKey];
+    let token = wpAuthInfo ? JSON.parse(wpAuthInfo).token : null;
+    this.getPagefromWP(token);
   }
   getPagefromWP(token) {
     request
       .get(this.props.apiEndpoint)
       .set(`Authorization`, `Bearer ${decodeURIComponent(token)}`)
+      // .set(`Authorization`, `Bearer ${token}`)
       .accept(`json`)
       .end((err, res) => {
         if (err) { console.log(`error: `, err); }

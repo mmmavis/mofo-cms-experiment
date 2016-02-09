@@ -24,9 +24,10 @@ function serveStaticFiles(req, res) {
     res.sendFile( path.resolve("bundle.js") );
   } else if ( pathRequested === "/login") {
     authWP(res);
-  } else if ( pathRequested === "/auth_success") {
-    getToken(req,res);
-  }
+  } 
+  // else if ( pathRequested === "/auth_success") {
+  //   getToken(req,res);
+  // }
   else {
     res.status(404).send('Not found');
   }
@@ -68,7 +69,7 @@ function getToken(req,res) {
             console.log("\n\n resFromWP ///// \n\n", resFromWP.text);
             res.send("Token get!");
           }
-        })
+        });
 }
 
 function htmlTemplate(appHtmlAsString) {
