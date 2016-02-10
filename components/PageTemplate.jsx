@@ -1,25 +1,24 @@
 import React from 'react';
 import request from 'superagent';
 import configWPCom from '../config-wp-com';
+import { WithWpAuth } from '../hoc/with-wp-auth.jsx';
 
-export default class PageTemplate extends React.Component {
+class PageTemplate extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       wpLoaded: false
     };
   }
-  getWPToken() {
-    let storage = window.localStorage;
-    let wpAuthInfo = storage[configWPCom.localStorageKey];
-    let token = wpAuthInfo ? JSON.parse(wpAuthInfo).token : null;
-    this.getPagefromWP(token);
+  componentDidUpdate() {
+    if ( !this.state.wpLoaded ) {
+      this.getPagefromWP(this.props.wpToken);
+    }
   }
   getPagefromWP(token) {
     request
       .get(this.props.apiEndpoint)
       .set(`Authorization`, `Bearer ${decodeURIComponent(token)}`)
-      // .set(`Authorization`, `Bearer ${token}`)
       .accept(`json`)
       .end((err, res) => {
         if (err) { console.log(`error: `, err); }
@@ -27,9 +26,6 @@ export default class PageTemplate extends React.Component {
         console.log(this.wpPage);
         this.setState({wpLoaded: true});
       });
-  }
-  componentDidMount() {
-    this.getWPToken();
   }
   render() {
     var page = this.wpPage;
@@ -49,3 +45,5 @@ export default class PageTemplate extends React.Component {
     );
   }
 }
+
+export default WithWpAuth(PageTemplate);
