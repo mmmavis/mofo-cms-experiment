@@ -20,6 +20,7 @@ export var WithWpAuth = ComposedComponent => class extends React.Component {
         this.setState({ wpToken: JSON.parse(wpAuthInfo).token });
       }
     } else {
+      storage.setItem("redirect_url", window.location.href);
       window.location = configWPCom.wpAuthEndpoint;
     }
   }
